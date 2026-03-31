@@ -13,15 +13,25 @@ import {
 } from "@mui/material";
 import NextLink from "next/link";
 
+type UploadResponse = {
+  success?: boolean;
+  count?: number;
+  message?: string;
+  error?: string;
+};
+
+function parseUploadResponse(raw: string): UploadResponse | null {
+  try {
+    return JSON.parse(raw) as UploadResponse;
+  } catch {
+    return null;
+  }
+}
+
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{
-    success?: boolean;
-    count?: number;
-    message?: string;
-    error?: string;
-  } | null>(null);
+  const [result, setResult] = useState<UploadResponse | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -41,9 +51,23 @@ export default function UploadPage() {
         method: "POST",
         body: formData,
       });
-      const data = await res.json();
+      const raw = await res.text();
+      const data = parseUploadResponse(raw);
       if (!res.ok) {
-        setResult({ success: false, error: data.error ?? "上传失败" });
+        const errorMessage =
+          data?.error ??
+          data?.message ??
+          `上传失败（HTTP ${res.status}）${
+            raw ? `：${raw.slice(0, 120)}` : ""
+          }`;
+        setResult({ success: false, error: errorMessage });
+        return;
+      }
+      if (!data) {
+        setResult({
+          success: false,
+          error: "服务端返回了非 JSON 响应，请检查线上函数日志",
+        });
         return;
       }
       setResult({

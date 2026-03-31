@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Create a `.env.local` file in project root:
+
+```bash
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# New Supabase UI can use this name instead:
+# SUPABASE_SECRET_KEY=your_supabase_secret_key
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` is server-only and must not be exposed to the browser.
+
 ## Getting Started
 
 First, run the development server:

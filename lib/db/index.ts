@@ -1,19 +1,41 @@
 import { randomUUID } from "crypto";
-import { Pool } from "pg";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const globalForDb = globalThis as unknown as {
-  pool: Pool | undefined;
+  supabase: SupabaseClient | undefined;
 };
 
-const pool =
-  globalForDb.pool ??
-  new Pool({ connectionString: process.env.DATABASE_URL });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.pool = pool;
+function getEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+  return value;
 }
 
-export { pool };
+function getSupabaseServerKey(): string {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  if (!key) {
+    throw new Error(
+      "Missing required env var: SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY)"
+    );
+  }
+  return key;
+}
+
+const supabase =
+  globalForDb.supabase ??
+  createClient(
+    getEnv("SUPABASE_URL"),
+    getSupabaseServerKey(),
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+    }
+  );
+
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.supabase = supabase;
+}
 
 export type MaterialListRow = {
   id: string;
@@ -40,53 +62,101 @@ export type ProjectInfoRow = {
 };
 
 export async function fetchAllMaterials(): Promise<MaterialListRow[]> {
-  const { rows } = await pool.query<MaterialListRow>(`
-    SELECT id, "项目名称", "品名", "材料编号", "规格", "数量"::text AS "数量", "单位"
-    FROM material_lists
-  `);
-  return rows;
+  const { data, error } = await supabase
+    .from("material_lists")
+    .select('id, "项目名称", "品名", "材料编号", "规格", "数量", "单位"');
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    项目名称: row.项目名称 ?? null,
+    品名: String(row.品名 ?? ""),
+    材料编号: String(row.材料编号 ?? ""),
+    规格: row.规格 ?? null,
+    数量: String(row.数量 ?? ""),
+    单位: String(row.单位 ?? ""),
+  }));
 }
 
 export async function fetchProjectsOrdered(): Promise<ProjectInfoRow[]> {
-  const { rows } = await pool.query<ProjectInfoRow>(`
-    SELECT id, code, "projectName", "constructionUnit", workflow, "initiatedAt",
-           initiator, "approvalNode", "urgencyLevel", "reviewStatus", "receivedAt"
-    FROM "ProjectInfo"
-    ORDER BY "initiatedAt" DESC NULLS LAST
-  `);
-  return rows;
+  const { data, error } = await supabase
+    .from("ProjectInfo")
+    .select(
+      'id, code, "projectName", "constructionUnit", workflow, "initiatedAt", initiator, "approvalNode", "urgencyLevel", "reviewStatus", "receivedAt"'
+    )
+    .order("initiatedAt", { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    code: String(row.code ?? ""),
+    projectName: String(row.projectName ?? ""),
+    constructionUnit: row.constructionUnit ?? null,
+    workflow: row.workflow ?? null,
+    initiatedAt: row.initiatedAt ? new Date(String(row.initiatedAt)) : null,
+    initiator: row.initiator ?? null,
+    approvalNode: row.approvalNode ?? null,
+    urgencyLevel: row.urgencyLevel ?? null,
+    reviewStatus: row.reviewStatus ?? null,
+    receivedAt: row.receivedAt ? new Date(String(row.receivedAt)) : null,
+  }));
 }
 
 export async function fetchProjectByCode(
   code: string
 ): Promise<ProjectInfoRow | undefined> {
-  const { rows } = await pool.query<ProjectInfoRow>(
-    `
-    SELECT id, code, "projectName", "constructionUnit", workflow, "initiatedAt",
-           initiator, "approvalNode", "urgencyLevel", "reviewStatus", "receivedAt"
-    FROM "ProjectInfo"
-    WHERE code = $1
-    LIMIT 1
-    `,
-    [code]
-  );
-  return rows[0];
+  const { data, error } = await supabase
+    .from("ProjectInfo")
+    .select(
+      'id, code, "projectName", "constructionUnit", workflow, "initiatedAt", initiator, "approvalNode", "urgencyLevel", "reviewStatus", "receivedAt"'
+    )
+    .eq("code", code)
+    .limit(1);
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row) return undefined;
+  return {
+    id: String(row.id),
+    code: String(row.code ?? ""),
+    projectName: String(row.projectName ?? ""),
+    constructionUnit: row.constructionUnit ?? null,
+    workflow: row.workflow ?? null,
+    initiatedAt: row.initiatedAt ? new Date(String(row.initiatedAt)) : null,
+    initiator: row.initiator ?? null,
+    approvalNode: row.approvalNode ?? null,
+    urgencyLevel: row.urgencyLevel ?? null,
+    reviewStatus: row.reviewStatus ?? null,
+    receivedAt: row.receivedAt ? new Date(String(row.receivedAt)) : null,
+  };
 }
 
 export async function fetchMaterialsForProject(
   decodedCode: string,
   projectName: string | null
 ): Promise<MaterialListRow[]> {
-  const { rows } = await pool.query<MaterialListRow>(
-    `
-    SELECT id, "项目名称", "品名", "材料编号", "规格", "数量"::text AS "数量", "单位"
-    FROM material_lists
-    WHERE "项目名称" = $1
-       OR ($2::text IS NOT NULL AND "项目名称" = $2)
-    `,
-    [decodedCode, projectName]
-  );
-  return rows;
+  const candidateNames = new Set<string>();
+  candidateNames.add(decodedCode);
+  if (projectName) candidateNames.add(projectName);
+
+  const merged = new Map<string, MaterialListRow>();
+  for (const name of candidateNames) {
+    const { data, error } = await supabase
+      .from("material_lists")
+      .select('id, "项目名称", "品名", "材料编号", "规格", "数量", "单位"')
+      .eq("项目名称", name);
+    if (error) throw error;
+    for (const row of data ?? []) {
+      const id = String(row.id);
+      merged.set(id, {
+        id,
+        项目名称: row.项目名称 ?? null,
+        品名: String(row.品名 ?? ""),
+        材料编号: String(row.材料编号 ?? ""),
+        规格: row.规格 ?? null,
+        数量: String(row.数量 ?? ""),
+        单位: String(row.单位 ?? ""),
+      });
+    }
+  }
+  return [...merged.values()];
 }
 
 type MaterialInsert = {
@@ -102,43 +172,28 @@ type MaterialInsert = {
 export async function replaceAllMaterialLists(
   rows: MaterialInsert[]
 ): Promise<void> {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("DELETE FROM material_lists");
-    if (rows.length > 0) {
-      const cols = 7;
-      const placeholders = rows
-        .map((_, rowIdx) => {
-          const base = rowIdx * cols + 1;
-          return `($${base}, $${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6})`;
-        })
-        .join(", ");
-      const params: unknown[] = [];
-      for (const row of rows) {
-        params.push(
-          randomUUID(),
-          row.项目名称,
-          row.品名,
-          row.材料编号,
-          row.规格,
-          row.数量,
-          row.单位
-        );
-      }
-      await client.query(
-        `
-        INSERT INTO material_lists (id, "项目名称", "品名", "材料编号", "规格", "数量", "单位")
-        VALUES ${placeholders}
-        `,
-        params
-      );
-    }
-    await client.query("COMMIT");
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
-  } finally {
-    client.release();
+  const { error: deleteError } = await supabase
+    .from("material_lists")
+    .delete()
+    .not("id", "is", null);
+  if (deleteError) throw deleteError;
+
+  if (rows.length === 0) return;
+
+  const insertRows = rows.map((row) => ({
+    id: randomUUID(),
+    项目名称: row.项目名称,
+    品名: row.品名,
+    材料编号: row.材料编号,
+    规格: row.规格,
+    数量: row.数量,
+    单位: row.单位,
+  }));
+
+  const chunkSize = 500;
+  for (let i = 0; i < insertRows.length; i += chunkSize) {
+    const chunk = insertRows.slice(i, i + chunkSize);
+    const { error } = await supabase.from("material_lists").insert(chunk);
+    if (error) throw error;
   }
 }

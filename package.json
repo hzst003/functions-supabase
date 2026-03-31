@@ -1,5 +1,5 @@
 {
-  "name": "nextjs-prisma-mui-neon",
+  "name": "nextjs-supabase-mui-neon",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,9 +14,9 @@
     "@mui/material": "^7.3.9",
     "@mui/material-nextjs": "^7.3.9",
     "@mui/x-data-grid": "^8.27.5",
+    "@supabase/supabase-js": "^2.101.0",
     "dotenv": "^17.3.1",
     "next": "16.1.7",
-    "pg": "^8.20.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "xlsx": "^0.18.5"
@@ -24,7 +24,6 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/pg": "^8.18.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

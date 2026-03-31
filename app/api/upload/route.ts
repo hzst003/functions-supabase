@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { replaceAllMaterialLists } from "@/lib/db";
 
+export const runtime = "nodejs";
+
 function parseNumber(v: unknown): string | null {
   if (v == null || v === "") return null;
   if (typeof v === "number" && !Number.isNaN(v)) return String(v);
