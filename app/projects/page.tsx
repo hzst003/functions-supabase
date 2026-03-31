@@ -1,15 +1,11 @@
-import { db, projectInfo } from "@/lib/db";
-import { desc } from "drizzle-orm";
+import { fetchProjectsOrdered } from "@/lib/db";
 import { Container, Paper, Typography, Box, Button } from "@mui/material";
 import ProjectsDataGrid, { type ProjectRow } from "./ProjectsDataGrid";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const projects = await db
-    .select()
-    .from(projectInfo)
-    .orderBy(desc(projectInfo.initiatedAt));
+  const projects = await fetchProjectsOrdered();
 
   const rows: ProjectRow[] = projects.map((p, index) => ({
     id: p.id.toString(),

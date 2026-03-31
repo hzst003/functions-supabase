@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* 与 MUI AppRouterCacheProvider enableCssLayer 对齐，避免样式顺序与水合问题 */
+@layer theme, base, mui, components, utilities;
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

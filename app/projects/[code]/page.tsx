@@ -1,5 +1,7 @@
-import { db, materialLists, projectInfo } from "@/lib/db";
-import { eq, or } from "drizzle-orm";
+import {
+  fetchMaterialsForProject,
+  fetchProjectByCode,
+} from "@/lib/db";
 import { Container, Paper, Typography, Box } from "@mui/material";
 import MaterialsDataGrid, {
   type MaterialRow,
@@ -15,21 +17,12 @@ export default async function ProjectMaterialsPage(props: Props) {
   const { code } = await props.params;
   const decodedCode = decodeURIComponent(code);
 
-  const [project] = await db
-    .select()
-    .from(projectInfo)
-    .where(eq(projectInfo.code, decodedCode))
-    .limit(1);
+  const project = await fetchProjectByCode(decodedCode);
 
-  const nameConditions = [eq(materialLists.项目名称, decodedCode)];
-  if (project?.projectName) {
-    nameConditions.push(eq(materialLists.项目名称, project.projectName));
-  }
-
-  const materials = await db
-    .select()
-    .from(materialLists)
-    .where(or(...nameConditions));
+  const materials = await fetchMaterialsForProject(
+    decodedCode,
+    project?.projectName ?? null
+  );
 
   const rows: MaterialRow[] = materials.map((m, index) => ({
     id: m.id.toString(),
