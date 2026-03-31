@@ -6,16 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.9",
     "@mui/x-data-grid": "^8.27.5",
-    "@prisma/adapter-pg": "^7.5.0",
-    "@prisma/client": "^7.5.0",
     "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.2",
     "next": "16.1.7",
     "pg": "^8.20.0",
     "react": "19.2.3",
@@ -28,9 +31,9 @@
     "@types/pg": "^8.18.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
-    "prisma": "^7.5.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

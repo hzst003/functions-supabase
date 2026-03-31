@@ -1,9 +1,11 @@
-import prisma from "@/lib/prisma";
+import { db, materialLists } from "@/lib/db";
 import { Container, Paper, Typography } from "@mui/material";
 import MaterialsDataGrid, { type MaterialRow } from "./components/MaterialsDataGrid";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
-  const materials = await prisma.materialList.findMany();
+  const materials = await db.select().from(materialLists);
 
   const rows: MaterialRow[] = materials.map((m, index) => ({
     id: m.id.toString(),

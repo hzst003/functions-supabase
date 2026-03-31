@@ -1,6 +1,7 @@
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import prisma from "@/lib/prisma";
+import { db, materialLists } from "@/lib/db";
 
 function parseNumber(v: unknown): string | null {
   if (v == null || v === "") return null;
@@ -75,13 +76,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // 先清空表，再导入新数据，使用事务保证原子性
-    await prisma.$transaction([
-      prisma.materialList.deleteMany({}),
-      prisma.materialList.createMany({
-        data: toInsert,
-      }),
-    ]);
+    await db.transaction(async (tx) => {
+      await tx.delete(materialLists);
+      if (toInsert.length > 0) {
+        await tx.insert(materialLists).values(
+          toInsert.map((row) => ({ ...row, id: randomUUID() }))
+        );
+      }
+    });
 
     return NextResponse.json({
       success: true,

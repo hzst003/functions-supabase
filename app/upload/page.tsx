@@ -66,7 +66,7 @@ export default function UploadPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-start justify-center py-10">
       <Container maxWidth="sm">
-        <Box className="-mt-16 mb-8 text-center">
+        <Box className="mt-8 mb-8 text-center">
           <Typography
             variant="h4"
             className="font-[family-name:var(--font-geist-sans)] text-[#333333]"

@@ -41,9 +41,7 @@ type Props = {
 export default function ProjectsDataGrid({ rows }: Props) {
   const router = useRouter();
 
-  const columnsWithActions: GridColDef<ProjectRow>[] = [
-    ...columns,
-    {
+  const actionColumn: GridColDef<ProjectRow> = {
       field: "actions",
       headerName: "操作",
       width: 120,
@@ -62,7 +60,12 @@ export default function ProjectsDataGrid({ rows }: Props) {
           查看
         </Button>
       ),
-    },
+    };
+
+  const columnsWithActions: GridColDef<ProjectRow>[] = [
+    ...columns.slice(0, 3),
+    actionColumn,
+    ...columns.slice(3),
   ];
 
   return (

@@ -1,11 +1,15 @@
-import prisma from "@/lib/prisma";
-import { Container, Paper, Typography, Box } from "@mui/material";
+import { db, projectInfo } from "@/lib/db";
+import { desc } from "drizzle-orm";
+import { Container, Paper, Typography, Box, Button } from "@mui/material";
 import ProjectsDataGrid, { type ProjectRow } from "./ProjectsDataGrid";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage() {
-  const projects = await prisma.projectInfo.findMany({
-    orderBy: { initiatedAt: "desc" },
-  });
+  const projects = await db
+    .select()
+    .from(projectInfo)
+    .orderBy(desc(projectInfo.initiatedAt));
 
   const rows: ProjectRow[] = projects.map((p, index) => ({
     id: p.id.toString(),
@@ -29,9 +33,9 @@ export default async function ProjectsPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-start justify-center py-10">
       <Container maxWidth="lg">
-        <Box className="-mt-16 mb-8 text-center">
+        <Box className="mt-0 mb-8 text-center">
           <Typography
-            variant="h4"
+            variant="h6"
             className="font-[family-name:var(--font-geist-sans)] text-[#333333]"
           >
             项目信息列表
@@ -39,6 +43,13 @@ export default async function ProjectsPage() {
           <Typography color="text.secondary" className="mt-2">
             显示通过 Excel 导入的项目信息
           </Typography>
+          <Button
+            href="/upload"
+            variant="contained"
+            sx={{ mt: 2 }}
+          >
+            全局材料上传
+          </Button>
         </Box>
 
         <Paper elevation={3} className="p-4 md:p-6">

@@ -1,8 +1,11 @@
-import prisma from "@/lib/prisma";
+import { db, materialLists, projectInfo } from "@/lib/db";
+import { eq, or } from "drizzle-orm";
 import { Container, Paper, Typography, Box } from "@mui/material";
 import MaterialsDataGrid, {
   type MaterialRow,
 } from "../../components/MaterialsDataGrid";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ code: string }>; // 在 Next 16 中 params 是 Promise，需要先 await
@@ -12,23 +15,21 @@ export default async function ProjectMaterialsPage(props: Props) {
   const { code } = await props.params;
   const decodedCode = decodeURIComponent(code);
 
-  // 先尝试查出项目信息，用于回显项目名称，同时兼容“项目名称存编号”或“存中文名”的情况
-  const project = await prisma.projectInfo.findUnique({
-    where: { code: decodedCode },
-  });
+  const [project] = await db
+    .select()
+    .from(projectInfo)
+    .where(eq(projectInfo.code, decodedCode))
+    .limit(1);
 
-  const materials = await prisma.materialList.findMany({
-    where: {
-      OR: [
-        // 你当前设计：项目名称列存编号
-        { 项目名称: decodedCode },
-        // 兼容：如果以后材料里存的是中文项目名，则按真实项目名再查一遍
-        ...(project?.projectName
-          ? [{ 项目名称: project.projectName }]
-          : []),
-      ],
-    },
-  });
+  const nameConditions = [eq(materialLists.项目名称, decodedCode)];
+  if (project?.projectName) {
+    nameConditions.push(eq(materialLists.项目名称, project.projectName));
+  }
+
+  const materials = await db
+    .select()
+    .from(materialLists)
+    .where(or(...nameConditions));
 
   const rows: MaterialRow[] = materials.map((m, index) => ({
     id: m.id.toString(),
