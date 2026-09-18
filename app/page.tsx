@@ -48,7 +48,22 @@ export default function HomePage() {
             >
               按楼栋查看
             </Link>
+            <Link
+              href="/wenwan"
+              className="flex min-h-12 w-full items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 text-[15px] font-medium text-zinc-800 active:bg-zinc-50"
+            >
+              文玩图鉴
+            </Link>
           </div>
+
+          <p className="pt-1 text-center text-xs leading-5 text-zinc-400">
+            制作人：徐先生
+            <br />
+            联系电话：
+            <a href="tel:13858069509" className="text-zinc-500 underline-offset-2 active:underline">
+              13858069509
+            </a>
+          </p>
         </div>
       </section>
     </main>

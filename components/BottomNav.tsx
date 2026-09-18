@@ -19,6 +19,11 @@ const items = [
     label: "楼栋",
     match: (pathname: string) => pathname.startsWith("/buildings"),
   },
+  {
+    href: "/wenwan",
+    label: "文玩",
+    match: (pathname: string) => pathname.startsWith("/wenwan"),
+  },
 ];
 
 export function BottomNav() {
@@ -29,7 +34,7 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-20 border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       aria-label="底部导航"
     >
-      <div className="mx-auto grid max-w-md grid-cols-3">
+      <div className="mx-auto grid max-w-md grid-cols-4">
         {items.map((item) => {
           const active = item.match(pathname);
           return (
