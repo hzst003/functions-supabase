@@ -38,13 +38,25 @@ export function createPb() {
 /** Registered on each cover field. PocketBase rejects any other thumb size. */
 export const COVER_THUMB = "800x450";
 
+/** Same-origin media path so browsers never hit PocketBase HTTP directly. */
+function mediaPath(
+  collectionId: string,
+  recordId: string,
+  filename: string,
+  thumb?: string,
+) {
+  if (!collectionId || !recordId || !filename) return "";
+  const encoded = encodeURIComponent(filename);
+  const base = `/media/${collectionId}/${recordId}/${encoded}`;
+  return thumb ? `${base}?thumb=${encodeURIComponent(thumb)}` : base;
+}
+
 export function fileUrl(
   collectionId: string,
   recordId: string,
   filename: string,
 ) {
-  if (!filename) return "";
-  return `${PB_URL}/api/files/${collectionId}/${recordId}/${filename}?thumb=${COVER_THUMB}`;
+  return mediaPath(collectionId, recordId, filename, COVER_THUMB);
 }
 
 export function assetUrl(
@@ -52,8 +64,7 @@ export function assetUrl(
   recordId: string,
   filename: string,
 ) {
-  if (!collectionId || !recordId || !filename) return "";
-  return `${PB_URL}/api/files/${collectionId}/${recordId}/${filename}`;
+  return mediaPath(collectionId, recordId, filename);
 }
 
 export function quoteFilter(value: string) {
