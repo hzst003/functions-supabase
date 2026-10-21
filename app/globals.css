@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f6f8;
+  --foreground: #0e2744;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-navy-50: #eef3f8;
+  --color-navy-100: #d9e4f0;
+  --color-navy-950: #0e2744;
+  --color-navy-900: #12325c;
+  --color-navy-800: #173f72;
+  --color-navy-700: #1e4f8c;
+  --color-copper-50: #e7f0fa;
+  --color-copper-300: #8aadd4;
+  --color-copper-400: #1e4f8c;
+  --color-copper-600: #1a467e;
+  --color-copper-700: #143661;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+.prose-content h2,
+.prose-content h3 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: #0e2744;
+}
+
+.prose-content p {
+  margin: 0.75rem 0;
+  line-height: 1.8;
+  color: #334155;
+}
+
+.prose-content ul {
+  margin: 0.75rem 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+  color: #334155;
 }
